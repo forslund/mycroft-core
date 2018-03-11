@@ -6,7 +6,7 @@ backports.ssl-match-hostname==3.4.0.2
 PyAudio==0.2.11
 pyee==1.0.1
 SpeechRecognition==3.8.1
-tornado==4.2.1
+tornado==5.0.2
 websocket-client==0.32.0
 futures==3.0.3
 future==0.16.0

@@ -23,9 +23,16 @@ from websocket import (WebSocketApp, WebSocketConnectionClosedException,
                        WebSocketException)
 
 from mycroft.configuration import Configuration
+from mycroft.filesystem import FileSystemAccess
 from mycroft.messagebus.message import Message
 from mycroft.util import validate_param, create_echo_function
 from mycroft.util.log import LOG
+
+
+def read_token():
+    fs = FileSystemAccess('./')
+    with fs.open('token', 'r') as t:
+        return t.readline().strip()
 
 
 class WebsocketClient(object):
@@ -36,6 +43,7 @@ class WebsocketClient(object):
         port = port or config.get("port")
         route = route or config.get("route")
         ssl = ssl or config.get("ssl")
+        self.header = ["Authorization: BEARER " + read_token()]
         validate_param(host, "websocket.host")
         validate_param(port, "websocket.port")
         validate_param(route, "websocket.route")
@@ -56,7 +64,8 @@ class WebsocketClient(object):
     def create_client(self):
         return WebSocketApp(self.url,
                             on_open=self.on_open, on_close=self.on_close,
-                            on_error=self.on_error, on_message=self.on_message)
+                            on_error=self.on_error, on_message=self.on_message,
+                            header=self.header)
 
     def on_open(self, ws):
         LOG.info("Connected")
