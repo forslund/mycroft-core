@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import json
+import jwt
 from mycroft.util.parse import normalize
 
 
@@ -49,11 +49,11 @@ class Message(object):
         Returns:
             str: a json string representation of the message.
         """
-        return json.dumps({
+        return jwt.encode({
             'type': self.type,
             'data': self.data,
             'context': self.context
-        })
+        }, 'secret')
 
     @staticmethod
     def deserialize(value):
@@ -71,7 +71,7 @@ class Message(object):
             int the function.
             value(str): This is the string received from the websocket
         """
-        obj = json.loads(value)
+        obj = jwt.decode(value, 'secret')
         return Message(obj.get('type'), obj.get('data'), obj.get('context'))
 
     def reply(self, type, data=None, context=None):
