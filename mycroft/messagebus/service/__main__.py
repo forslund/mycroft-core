@@ -14,6 +14,7 @@
 #
 from tornado import autoreload, web, ioloop
 
+from .httpserv import start_http_server
 from mycroft.configuration import Configuration
 from mycroft.lock import Lock  # creates/supports PID locking file
 from mycroft.messagebus.service.ws import WebsocketEventHandler
@@ -51,6 +52,8 @@ def main():
     ]
     application = web.Application(routes, **settings)
     application.listen(port, host)
+
+    http = start_http_server(prefix='/opt/mycroft/skills/', port=7654)
     create_daemon(ioloop.IOLoop.instance().start)
 
     wait_for_exit_signal()
