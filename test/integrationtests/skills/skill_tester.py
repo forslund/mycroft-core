@@ -192,6 +192,7 @@ class InterceptEmitter(object):
     def __init__(self):
         self.emitter = EventEmitter()
         self.q = None
+        do_training = False
 
     def on(self, event, f):
         # run all events
@@ -200,8 +201,12 @@ class InterceptEmitter(object):
 
     def emit(self, event, *args, **kwargs):
         event_name = event.type
-        if self.q:
+        if self.q and event.type != 'mycroft.skills.padatious_service:train':
             self.q.put(event)
+        elif event.type == 'mycroft.skills.padatious_service:train':
+            self.do_training = True
+            return
+
         self.emitter.emit(event_name, event, *args, **kwargs)
 
     def once(self, event, f):
@@ -263,8 +268,11 @@ class MockSkillsLoader(object):
     def load_skills(self):
         skills, self.load_log = load_skills(self.emitter, self.skills_root)
         self.skills = [s for s in skills if s]
-        self.ps.train(Message('', data=dict(single_thread=True)))
+        self.train_padatious()
         return self.emitter.emitter  # kick out the underlying emitter
+
+    def train_padatious(self):
+        self.ps.train(Message('', data=dict(single_thread=True)))
 
     def unload_skills(self):
         unload_skills(self.skills)
@@ -295,6 +303,10 @@ class SkillTest(object):
             Args:
                 loader:  A list of loaded skills
         """
+        # Make sure any update to padatious is preformed before skill test
+        if loader.emitter.do_training:
+            loader.train_padatious()
+
         s = [s for s in loader.skills if s and s.root_dir == self.skill]
         if s:
             s = s[0]
