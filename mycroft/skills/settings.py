@@ -140,7 +140,7 @@ class SkillSettings(dict):
                           disabled.
     """
 
-    def __init__(self, directory, name, no_upload=False):
+    def __init__(self, directory, name):
         super(SkillSettings, self).__init__()
         # when skills try to instantiate settings
         # in __init__, it can erase the settings saved
@@ -167,16 +167,14 @@ class SkillSettings(dict):
         self._blank_poll_timer = None
         self._is_alive = True
 
-        if not no_upload:
-            # if settingsmeta exist
-            if isfile(self._meta_path):
-                self._poll_skill_settings()
-            # if not disallowed by user upload an entry for all skills
-            # installed
-            elif self.config['skills']['upload_skill_manifest']:
-                self._blank_poll_timer = Timer(1, self._init_blank_meta)
-                self._blank_poll_timer.daemon = True
-                self._blank_poll_timer.start()
+        # if settingsmeta exist
+        if isfile(self._meta_path):
+            self._poll_skill_settings()
+        # if not disallowed by user upload an entry for all skills installed
+        elif self.config['skills']['upload_skill_manifest']:
+            self._blank_poll_timer = Timer(1, self._init_blank_meta)
+            self._blank_poll_timer.daemon = True
+            self._blank_poll_timer.start()
 
     def __hash__(self):
         """ Simple object unique hash. """

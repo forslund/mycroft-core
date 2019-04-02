@@ -14,12 +14,16 @@
 #
 import json
 import unittest
-from mock import patch
+from mock import MagicMock
 
 from os import remove
 from os.path import join, dirname
 
 from mycroft.skills.settings import SkillSettings
+
+
+SkillSettings._poll_skill_settings = MagicMock()
+SkillSettings._init_blank_meta = MagicMock()
 
 
 class SkillSettingsTest(unittest.TestCase):
@@ -29,28 +33,20 @@ class SkillSettingsTest(unittest.TestCase):
         except OSError:
             pass
 
-    @patch('mycroft.skills.settings.build_global_id')
-    def test_new(self, mock_gid):
-        mock_gid.return_value = ('TestSkill', 'TestSkill')
+    def test_new(self):
         s = SkillSettings(join(dirname(__file__), 'settings'),
-                          "test-skill-settings", no_upload=True)
+                          "test-skill-settings")
         self.assertEqual(len(s), 0)
-        s.stop_polling()
 
-    @patch('mycroft.skills.settings.build_global_id')
-    def test_add_value(self, mock_gid):
-        mock_gid.return_value = ('TestSkill', 'TestSkill')
+    def test_add_value(self):
         s = SkillSettings(join(dirname(__file__), 'settings'),
-                          "test-skill-settings", no_upload=True)
+                          "test-skill-settings")
         s['test_val'] = 1
         self.assertEqual(s['test_val'], 1)
-        s.stop_polling()
 
-    @patch('mycroft.skills.settings.build_global_id')
-    def test_store(self, mock_gid):
-        mock_gid.return_value = ('TestSkill', 'TestSkill')
+    def test_store(self):
         s = SkillSettings(join(dirname(__file__), 'settings'),
-                          "test-skill-settings", no_upload=True)
+                          "test-skill-settings")
         s.allow_overwrite = True
         s.load_skill_settings_from_file()
         s['bool'] = True
@@ -66,19 +62,16 @@ class SkillSettingsTest(unittest.TestCase):
         s2.load_skill_settings_from_file()
         for key in s:
             self.assertEqual(s[key], s2[key])
-        s.stop_polling()
 
-    @patch('mycroft.skills.settings.build_global_id')
-    def test_update_list(self, mock_gid):
-        mock_gid.return_value = ('TestSkill', 'TestSkill')
+    def test_update_list(self):
         s = SkillSettings(join(dirname(__file__), 'settings'),
-                          "test-skill-settings", no_upload=True)
+                          "test-skill-settings")
         s.allow_overwrite = True
         s.load_skill_settings_from_file()
         s['l'] = ['a', 'b', 'c']
         s.store()
         s2 = SkillSettings(join(dirname(__file__), 'settings'),
-                           "test-skill-settings", no_upload=True)
+                           "test-skill-settings")
         s2.allow_overwrite = True
         s2.load_skill_settings_from_file()
         self.assertEqual(s['l'], s2['l'])
@@ -87,22 +80,19 @@ class SkillSettingsTest(unittest.TestCase):
         s2['l'].append('d')
         s2.store()
         s3 = SkillSettings(join(dirname(__file__), 'settings'),
-                           "test-skill-settings", no_upload=True)
+                           "test-skill-settings")
         s3.allow_overwrite = True
         s3.load_skill_settings_from_file()
         self.assertEqual(s2['l'], s3['l'])
-        s.stop_polling()
 
-    @patch('mycroft.skills.settings.build_global_id')
-    def test_update_dict(self, mock_gid):
-        mock_gid.return_value = ('TestSkill', 'TestSkill')
+    def test_update_dict(self):
         s = SkillSettings(join(dirname(__file__), 'settings'),
-                          "test-skill-settings", no_upload=True)
+                          "test-skill-settings")
         s.allow_overwrite = True
         s['d'] = {'a': 1, 'b': 2}
         s.store()
         s2 = SkillSettings(join(dirname(__file__), 'settings'),
-                           "test-skill-settings", no_upload=True)
+                           "test-skill-settings")
         s2.allow_overwrite = True
         s2.load_skill_settings_from_file()
         self.assertEqual(s['d'], s2['d'])
@@ -111,15 +101,12 @@ class SkillSettingsTest(unittest.TestCase):
         s2['d']['c'] = 3
         s2.store()
         s3 = SkillSettings(join(dirname(__file__), 'settings'),
-                           "test-skill-settings", no_upload=True)
+                           "test-skill-settings")
         s3.allow_overwrite = True
         s3.load_skill_settings_from_file()
         self.assertEqual(s2['d'], s3['d'])
-        s.stop_polling()
 
-    @patch('mycroft.skills.settings.build_global_id')
-    def test_no_change(self, mock_gid):
-        mock_gid.return_value = ('TestSkill', 'TestSkill')
+    def test_no_change(self):
         s = SkillSettings(join(dirname(__file__), 'settings'),
                           "test-skill-settings")
         s.allow_overwrite = True
@@ -131,11 +118,8 @@ class SkillSettingsTest(unittest.TestCase):
         s2.allow_overwrite = True
         s2.load_skill_settings_from_file()
         self.assertTrue(len(s) == len(s2))
-        s.stop_polling()
 
-    @patch('mycroft.skills.settings.build_global_id')
-    def test_load_existing(self, mock_gid):
-        mock_gid.return_value = ('TestSkill', 'TestSkill')
+    def test_load_existing(self):
         directory = join(dirname(__file__), 'settings', 'settings.json')
         with open(directory, 'w') as f:
             json.dump({"test": "1"}, f)
@@ -144,7 +128,6 @@ class SkillSettingsTest(unittest.TestCase):
         s.allow_overwrite = True
         s.load_skill_settings_from_file()
         self.assertEqual(len(s), 1)
-        s.stop_polling()
 
 
 if __name__ == '__main__':
