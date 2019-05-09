@@ -14,6 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+if [[ $(uname) == "FreeBSD" ]] ; then
+    STAT_CMD='stat -f %Su:%Sg'
+else
+    STAT_CMD='stat -c %U:%G'
+fi
+
 mycroft_root_dir="/opt/mycroft"  # Also change in configuration
 skills_dir="${mycroft_root_dir}"/skills
 # exit on any error
@@ -60,6 +66,6 @@ if [[ ${IS_TRAVIS} != true ]] ; then
 fi
 
 # fix ownership of ${mycroft_root_dir} if it is not owned by the ${setup_user}
-if [[ $( stat -c "%U:%G" ${mycroft_root_dir} ) != "${setup_user}:${setup_user}" ]] ; then
+if [[ $( $STAT_CMD ${mycroft_root_dir} ) != ${setup_user}:${setup_user} ]] ; then
     change_ownership
 fi

@@ -21,6 +21,9 @@ export LANG=C
 # exit on any error
 set -Ee
 
+# Default md5sum
+MD5SUM=md5sum
+
 cd $(dirname $0)
 TOP=$( pwd -L )
 
@@ -116,12 +119,14 @@ function get_YN() {
 }
 
 if found_exe tput ; then
+    set +Ee
     GREEN="$(tput setaf 2)"
     BLUE="$(tput setaf 4)"
     CYAN="$(tput setaf 6)"
     YELLOW="$(tput setaf 3)"
     RESET="$(tput sgr0)"
     HIGHLIGHT=${YELLOW}
+    set -Ee
 fi
 
 # Run a setup wizard the very first time that guides the user through some decisions
@@ -273,6 +278,11 @@ function redhat_common_install() {
 
 function install_deps() {
     echo "Installing packages..."
+    if found_exe pkg ; then
+	$SUDO pkg install -y python36 py36-pip jpeg tiff webp freetype2 lcms swig30 mpg123 flac curl pkgconf pulseaudio portaudio fann coreutils
+        # BSD md5sum is gmd5sum
+        MD5SUM=gmd5sum
+    fi
     if found_exe zypper ; then
         # OpenSUSE
         $SUDO zypper install -y git python3 python3-devel libtool libffi-devel libopenssl-devel autoconf automake bison swig portaudio-devel mpg123 flac curl libicu-devel pkg-config libjpeg-devel libfann-devel python3-curses pulseaudio
@@ -411,24 +421,6 @@ if ! pip install -r test-requirements.txt ; then
     echo "Warning test requirements wasn't installed, Note: normal operation should still work fine..."
 fi
 
-SYSMEM=$( free | awk '/^Mem:/ { print $2 }' )
-MAXCORES=$(($SYSMEM / 512000))
-MINCORES=1
-CORES=$( nproc )
-
-# ensure MAXCORES is > 0
-if [[ ${MAXCORES} -lt 1 ]] ; then
-    MAXCORES=${MINCORES}
-fi
-
-# look for positive integer
-if ! [[ ${CORES} =~ ^[0-9]+$ ]] ; then
-    CORES=${MINCORES}
-elif [[ ${MAXCORES} -lt ${CORES} ]] ; then
-    CORES=${MAXCORES}
-fi
-
-echo "Building with $CORES cores."
 
 #build and install pocketsphinx
 #cd ${TOP}
@@ -437,6 +429,24 @@ echo "Building with $CORES cores."
 cd "${TOP}"
 
 if [[ "$build_mimic" == "y" ]] || [[ "$build_mimic" == "Y" ]] ; then
+    SYSMEM=$( free | awk '/^Mem:/ { print $2 }' )
+    MAXCORES=$(($SYSMEM / 512000))
+    MINCORES=1
+    CORES=$( nproc )
+
+    # ensure MAXCORES is > 0
+    if [[ ${MAXCORES} -lt 1 ]] ; then
+        MAXCORES=${MINCORES}
+    fi
+
+    # look for positive integer
+    if ! [[ ${CORES} =~ ^[0-9]+$ ]] ; then
+        CORES=${MINCORES}
+    elif [[ ${MAXCORES} -lt ${CORES} ]] ; then
+        CORES=${MAXCORES}
+    fi
+
+    echo "Building with $CORES cores."
     echo "WARNING: The following can take a long time to run!"
     "${TOP}/scripts/install-mimic.sh" " ${CORES}"
 else
@@ -467,4 +477,4 @@ if [[ ! -w /var/log/mycroft/ ]] ; then
 fi
 
 #Store a fingerprint of setup
-md5sum requirements.txt test-requirements.txt dev_setup.sh > .installed
+${MD5SUM} requirements.txt test-requirements.txt dev_setup.sh > .installed

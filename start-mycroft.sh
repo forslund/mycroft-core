@@ -22,6 +22,14 @@ cd -P "$( dirname "$SOURCE" )"
 DIR="$( pwd )"
 VIRTUALENV_ROOT=${VIRTUALENV_ROOT:-"${DIR}/.venv"}
 
+if [[ $(uname) == "FreeBSD" ]] ; then
+    MD5SUM='gmd5sum'
+else
+    MD5SUM='md5sum'
+fi
+
+
+
 function help() {
     echo "${script}:  Mycroft command/service launcher"
     echo "usage: ${script} [COMMAND] [restart] [params]"
@@ -160,7 +168,7 @@ function check-dependencies() {
         git pull
     fi
 
-    if [ ! -f .installed ] || ! md5sum -c &> /dev/null < .installed ; then
+    if [ ! -f .installed ] || ! ${MD5SUM} -c &> /dev/null < .installed ; then
         # Critical files have changed, dev_setup.sh should be run again
         if [ "$auto_update" == "true" ] ; then
             echo "Updating dependencies..."
