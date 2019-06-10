@@ -82,6 +82,42 @@ msm = None
 msm_creation_time = 0
 
 
+class GidFamily():
+    """ Skill Gid family based on complete skill Gid.
+
+    Implements contains, str and repr
+    """
+    def __init__(self, identifier):
+        parts = identifier.split('|')
+        # Handle {skill-name}|{branch}
+        if len(parts) == 2 and '@' not in parts[0]:
+            self.base = parts[0]
+        # Handle @{uuid}|{skill-name}
+        elif len(parts) == 2:
+            self.base = parts[1]
+        # Handle @{uuid}|{skill-name}|{branch}
+        elif len(parts) == 3:
+            self.base = parts[1]
+        else:
+            raise ValueError('{} isn\'t a valid skill GID'.format(identifier))
+
+    def __contains__(self, identifier):
+        """ Implement to allow allow checking if a gid is in the same family"""
+        parts = identifier.split('|')
+        if len(parts) == 2:
+            return parts[0] == self.base
+        if len(parts) == 3:
+            return parts[1] == self.base
+        else:
+            raise ValueError('{} isn\'t a valid skill GID'.format(identifier))
+
+    def __str__(self):
+        return self.base
+
+    def __repr__(self):
+        return str(self)
+
+
 def build_global_id(directory, config):
     """ Create global id for the skill.
 
@@ -514,6 +550,9 @@ class SkillSettings(dict):
                         self._type_cast(skill_settings, to_platform='core')
                     self._remote_settings = skill_settings
                     return skill_settings
+                elif skill_settings['identifier'] in GidFamily(identifier):
+                    self.api.delete_skills_metadata(
+                        skill_settings['identifier'])
         return None
 
     def _request_settings(self):
