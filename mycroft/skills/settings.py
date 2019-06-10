@@ -64,10 +64,9 @@ import hashlib
 import os
 import yaml
 import time
-import copy
 import re
 from threading import Timer
-from os.path import isfile, join, expanduser
+from os.path import isfile, join
 from requests.exceptions import RequestException, HTTPError
 from msm import SkillEntry
 
@@ -85,8 +84,6 @@ msm_creation_time = 0
 
 def build_global_id(directory, config):
     """ Create global id for the skill.
-
-    TODO: Handle dirty skill
 
     Arguments:
         directory:  skill directory
@@ -354,7 +351,7 @@ class SkillSettings(dict):
         LOG.debug('Uploading settings meta for {}'.format(identifier))
         meta = self._migrate_settings(settings_meta)
         meta['identifier'] = identifier
-        response = self._send_settings_meta(meta)
+        self._send_settings_meta(meta)
 
     def hash(self, string):
         """ md5 hasher for consistency across cpu architectures """
