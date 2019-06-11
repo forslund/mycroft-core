@@ -118,6 +118,30 @@ class GidFamily():
         return str(self)
 
 
+def _finalize_skill_gid(skill_gid):
+    if is_paired():
+        return skill_gid.replace('@|', '@{}|'.format(
+            DeviceApi().identity.uuid))
+    else:
+        return skill_gid
+
+
+def clean_remote_settings():
+    """ Remove remote settings of skills not in the local installation. """
+    msm = create_msm()
+    d = DeviceApi
+    installed_skill_gids = [_finalize_skill_gid(s.skill_gid)
+                            for s in msm.list() if s.is_local]
+    remote_settings = DeviceApi().get_skill_settings()
+    delete_list = [s['identifier'] for s in remote_settings
+                   if s['identifier'] not in installed_skill_gids]
+
+    if delete_list:
+        LOG.info('Cleaning {} from the backend...'.format(delete_list))
+        for s in delete_list:
+            d.delete_skill_metadata(s)
+
+
 def build_global_id(directory, config):
     """ Create global id for the skill.
 
@@ -205,11 +229,7 @@ class SkillSettings(dict):
     @property
     def skill_gid(self):
         """ Finalizes the skill gid to include device uuid if needed. """
-        if is_paired():
-            return self.__skill_gid.replace('@|', '@{}|'.format(
-                DeviceApi().identity.uuid))
-        else:
-            return self.__skill_gid
+        return _finalize_skill_gid(self.__skill_gid)
 
     def __hash__(self):
         """ Simple object unique hash. """

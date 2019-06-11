@@ -33,6 +33,7 @@ from .core import FallbackSkill
 from .event_scheduler import EventScheduler
 from .intent_service import IntentService
 from .padatious_service import PadatiousService
+from .settings import clean_remote_settings
 
 bus = None  # Mycroft messagebus reference, see "mycroft.messagebus"
 event_scheduler = None
@@ -171,6 +172,7 @@ def check_connection():
                 from mycroft.api import DeviceApi
                 api = DeviceApi()
                 api.update_version()
+                clean_remote_settings()
         except BackendDown:
             data = {'utterance': dialog.get("backend.down")}
             bus.emit(Message("speak", data))
