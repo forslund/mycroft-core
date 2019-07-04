@@ -285,12 +285,15 @@ class SkillManager(Thread):
                 LOG.exception(e)
             self.loaded_skills.pop(s)
 
-    def _load_or_reload_skill(self, skill_path):
-        """
-            Check if unloaded skill or changed skill needs reloading
-            and perform loading if necessary.
+    def _load_needed(self, skill_path):
+        """ Check if skill needs (re)loading.
 
-            Returns True if the skill was loaded/reloaded
+        If not loaded or modified since last load.
+
+        Arguments:
+            skill_path: path to skill to check.
+
+        Returns: True if (re)load is needed.
         """
         skill_path = skill_path.rstrip('/')
         skill = self.loaded_skills.setdefault(skill_path, {})
@@ -307,9 +310,21 @@ class SkillManager(Thread):
         # checking if skill is loaded and hasn't been modified on disk
         if skill.get("loaded") and modified <= last_mod:
             return False  # Nothing to do!
+        else:
+            return True
 
-        # check if skill was modified
-        elif skill.get("instance") and modified > last_mod:
+    def _load_or_reload_skill(self, skill_path):
+        """
+            Check if unloaded skill or changed skill needs reloading
+            and perform loading if necessary.
+
+            Returns True if the skill was loaded/reloaded
+        """
+        skill_path = skill_path.rstrip('/')
+        skill = self.loaded_skills.setdefault(skill_path, {})
+
+        # Check if this is a reload
+        if skill.get("instance"):
             # check if skill has been blocked from reloading
             if (not skill["instance"].reload_skill or
                     not skill.get('active', True)):
@@ -343,6 +358,7 @@ class SkillManager(Thread):
                                        self.bus, skill["id"],
                                        BLACKLISTED_SKILLS)
 
+        modified = _get_last_modified_date(skill_path)
         skill["last_modified"] = modified
         if skill['instance'] is not None:
             self.bus.emit(Message('mycroft.skills.loaded',
@@ -370,6 +386,7 @@ class SkillManager(Thread):
                                       '{} failed'.format(skill.name))
                         if not skill.is_local:
                             continue
+                self._load_needed(skill.path)
                 self._load_or_reload_skill(skill.path)
             else:
                 LOG.error('Priority skill {} can\'t be found')
@@ -406,15 +423,18 @@ class SkillManager(Thread):
             # checking skills dir and getting all skills there
             skill_paths = glob(join(self.msm.skills_dir, '*/'))
             still_loading = False
-            for skill_path in skill_paths:
-                try:
-                    still_loading = (
-                            self._load_or_reload_skill(skill_path) or
-                            still_loading
-                    )
-                except Exception as e:
-                    LOG.error('(Re)loading of {} failed ({})'.format(
-                        skill_path, repr(e)))
+
+            needed_reloads = [s for s in skill_paths if self._load_needed(s)]
+
+            from multiprocessing.pool import ThreadPool
+            try:
+                with ThreadPool(2) as tp:
+                    still_loading = all(tp.map(self._load_or_reload_skill,
+                                               needed_reloads))
+
+            except Exception as e:
+                LOG.error('(Re)loading of {} failed ({})'.format(
+                    'a skill', repr(e)))
             if not has_loaded and not still_loading and len(skill_paths) > 0:
                 has_loaded = True
                 LOG.info("Skills all loaded!")
