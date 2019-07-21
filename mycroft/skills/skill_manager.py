@@ -78,7 +78,7 @@ MSM_LOCK = None
 
 
 class SkillManager(Thread):
-    """ Load, update and manage instances of Skill on this system.
+    """ Daemon thread used to load, update and manage skill instances.
 
     Arguments:
         bus (eventemitter): Mycroft messagebus connection
@@ -127,6 +127,8 @@ class SkillManager(Thread):
         bus.on('skillmanager.keep', self.deactivate_except)
         bus.on('skillmanager.activate', self.activate_skill)
         bus.on('mycroft.paired', self.handle_paired)
+
+        self.daemon = True  # Make this a daemon thread
 
     @staticmethod
     def get_lock():
