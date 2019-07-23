@@ -437,15 +437,6 @@ def handle_utterance(event):
     set_screen_dirty()
 
 
-def connect(bus):
-    """ Run the mycroft messagebus referenced by bus.
-
-        Arguments:
-            bus:    Mycroft messagebus instance
-    """
-    bus.run_forever()
-
-
 ##############################################################################
 # Capturing the messagebus
 
@@ -1430,8 +1421,5 @@ def connect_to_messagebus():
         Returns: WebsocketClient
     """
     bus = MessageBusClient()  # Mycroft messagebus connection
-
-    event_thread = Thread(target=connect, args=[bus])
-    event_thread.setDaemon(True)
-    event_thread.start()
+    bus.run_as_daemon()
     return bus

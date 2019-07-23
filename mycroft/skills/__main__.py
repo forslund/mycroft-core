@@ -29,7 +29,7 @@ from mycroft.messagebus.client import MessageBusClient
 from mycroft.messagebus.message import Message
 from mycroft.util import (
     connected, wait_while_speaking, reset_sigint_handler,
-    create_echo_function, create_daemon, wait_for_exit_signal
+    create_echo_function, wait_for_exit_signal
 )
 from mycroft.util.log import LOG
 from mycroft.util.lang import set_active_lang
@@ -253,7 +253,7 @@ def start_bus(bus):
     bus.on('message', create_echo_function('SKILLS'))
     # Call set_connected function when connection is established
     bus.once('open', set_connected)
-    create_daemon(bus.run_forever)
+    bus.run_as_daemon()
 
     # Wait for connection
     bus_connected.wait()

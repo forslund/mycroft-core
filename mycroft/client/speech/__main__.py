@@ -177,7 +177,7 @@ def main():
     bus.on('mycroft.stop', handle_stop)
     bus.on('message', create_echo_function('VOICE'))
 
-    create_daemon(bus.run_forever)
+    bus.run_as_daemon()
     create_daemon(loop.run)
 
     wait_for_exit_signal()

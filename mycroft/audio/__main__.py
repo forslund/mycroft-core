@@ -19,8 +19,8 @@
 """
 from mycroft.configuration import Configuration
 from mycroft.messagebus.client import MessageBusClient
-from mycroft.util import reset_sigint_handler, wait_for_exit_signal, \
-    create_daemon, create_echo_function, check_for_signal
+from mycroft.util import (reset_sigint_handler, wait_for_exit_signal,
+    create_echo_function, check_for_signal)
 from mycroft.util.log import LOG
 
 import mycroft.audio.speech as speech
@@ -38,7 +38,7 @@ def main():
     LOG.info("Starting Audio Services")
     bus.on('message', create_echo_function('AUDIO', ['mycroft.audio.service']))
     audio = AudioService(bus)  # Connect audio service instance to message bus
-    create_daemon(bus.run_forever)
+    bus.run_as_daemon()
 
     wait_for_exit_signal()
 
