@@ -185,6 +185,7 @@ class DevicePrimer(object):
     def _update_system(self):
         """Emit an update event that will be handled by the admin service."""
         if not self.is_paired:
+            self._speak_dialog(dialog_id='checking for updates')
             LOG.info('Attempting system update...')
             self.bus.emit(Message('system.update'))
             msg = Message(
