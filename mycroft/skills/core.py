@@ -33,3 +33,4 @@ class MycroftSkill(mycroft_skill.MycroftSkill):
 class FallbackSkill(fallback_skill.FallbackSkill):
     # Compatibility, needs to be kept for a while to not break every skill
     pass
+
