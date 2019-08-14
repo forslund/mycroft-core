@@ -24,6 +24,7 @@ from mycroft.util.log import LOG
 from mycroft.util.parse import normalize
 from mycroft.metrics import report_timing, Stopwatch
 from mycroft.skills.padatious_service import PadatiousService
+from .intent_service_interface import open_intent_envelope
 
 
 class AdaptIntent(IntentBuilder):
@@ -514,12 +515,3 @@ class IntentService:
     def handle_clear_context(self, message):
         """ Clears all keywords from context """
         self.context_manager.clear_context()
-
-
-def open_intent_envelope(message):
-    """Convert dictionary received over messagebus to Intent."""
-    intent_dict = message.data
-    return Intent(intent_dict.get('name'),
-                  intent_dict.get('requires'),
-                  intent_dict.get('at_least_one'),
-                  intent_dict.get('optional'))
