@@ -1,10 +1,13 @@
 from argparse import ArgumentParser
 from datetime import date, datetime, time
 from pathlib import Path
+from locale import localeconv
 
 BOOT_START_MESSAGE = 'Starting message bus service...'
 BOOT_END_MESSAGE = 'Skills all loaded!'
 NOT_FOUND = -1
+
+TIME_FORMAT = '%Y-%m-%d %H:%M:%S{}%f'.format(localeconv()['decimal_point'])
 
 
 class LogFileReader:
@@ -66,7 +69,7 @@ class LogFileReader:
         try:
             self.log_msg_ts = datetime.strptime(
                 log_msg_ts,
-                '%Y-%m-%d %H:%M:%S,%f'
+                TIME_FORMAT
             )
         except ValueError:
             print(
