@@ -421,10 +421,14 @@ class ResponsiveRecognizer(speech_recognition.Recognizer):
         energy_avg_samples = int(5 / sec_per_buffer)  # avg over last 5 secs
         counter = 0
 
+        chunks = []
+
         while not said_wake_word and not self._stop_signaled:
             if self._skip_wake_word():
                 break
             chunk = self.record_sound_chunk(source)
+            chunks = chunks[-5:]
+            chunks.append(chunk)
 
             energy = self.calc_energy(chunk, source.SAMPLE_WIDTH)
             if energy < self.energy_threshold * self.multiplier:
@@ -501,6 +505,8 @@ class ResponsiveRecognizer(speech_recognition.Recognizer):
                                   mtd or self._compile_metadata()]
                         ).start()
 
+        return b''.join(chunks)
+
     @staticmethod
     def _create_audio_data(raw_data, source):
         """
@@ -540,7 +546,7 @@ class ResponsiveRecognizer(speech_recognition.Recognizer):
         self.adjust_for_ambient_noise(source, 1.0)
 
         LOG.debug("Waiting for wake word...")
-        self._wait_until_wake_word(source, sec_per_buffer)
+        ww_frames = self._wait_until_wake_word(source, sec_per_buffer)
         if self._stop_signaled:
             return
 
@@ -549,7 +555,7 @@ class ResponsiveRecognizer(speech_recognition.Recognizer):
 
         # If enabled, play a wave file with a short sound to audibly
         # indicate recording has begun.
-        if self.config.get('confirm_listening'):
+        if self.config.get('confirm_listening') and False:
             audio_file = resolve_resource_file(
                 self.config.get('sounds').get('start_listening'))
             if audio_file:
@@ -558,7 +564,7 @@ class ResponsiveRecognizer(speech_recognition.Recognizer):
                 source.unmute()
 
         frame_data = self._record_phrase(source, sec_per_buffer, stream)
-        audio_data = self._create_audio_data(frame_data, source)
+        audio_data = self._create_audio_data(ww_frames + frame_data, source)
         emitter.emit("recognizer_loop:record_end")
         if self.save_utterances:
             LOG.info("Recording utterance")
