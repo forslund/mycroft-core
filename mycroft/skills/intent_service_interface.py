@@ -69,13 +69,14 @@ class IntentServiceInterface:
         self.bus.emit(Message("register_intent", intent_parser.__dict__))
         self.registered_intents.append((name, intent_parser))
 
-    def detach_intent(self, intent_name):
+    def detach_intent(self, intent_name, remove_keywords=False):
         """Remove an intent from the intent service.
 
         Arguments:
             intent_name(str): Intent reference
         """
-        self.bus.emit(Message("detach_intent", {"intent_name": intent_name}))
+        self.bus.emit(Message("detach_intent", {"intent_name": intent_name,
+                                                "remove_keywords": False}))
 
     def set_adapt_context(self, context, word, origin):
         """Set an Adapt context.

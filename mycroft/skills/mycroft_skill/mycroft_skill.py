@@ -233,7 +233,7 @@ class MycroftSkill:
     def detach(self):
         for (name, _) in self.intent_service:
             name = '{}:{}'.format(self.skill_id, name)
-            self.intent_service.detach_intent(name)
+            self.intent_service.detach_intent(name, remove_keywords=True)
 
     def initialize(self):
         """Perform any final setup needed for the skill.

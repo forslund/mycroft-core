@@ -32,6 +32,54 @@ class AdaptIntent(IntentBuilder):
         super().__init__(name)
 
 
+def find_type(t, engine):
+    res = []
+
+    def _find_type(t, node, current=''):
+        nonlocal res
+        print(t, node.data, t in node.data)
+        if node.data and t in [d[1] for d in node.data]:
+            res.append(current)
+
+        print(node.children)
+        for c in node.children:
+            _find_type(t, node.children[c], current + c)
+
+    _find_type(t, engine.trie.root)
+    return res
+
+
+def prune_keywords(keywords, engine):
+    """ remove keywords from parser if orphaned.
+
+    Arguments:
+        keywords (list): keywords to remove if unused
+        parser (IntentEngine): intent engine to prune
+    """
+    # Get all keywords currently in parser
+    used_keywords = []
+    for p in engine.intent_parsers:
+        keywords += p.requires
+        keywords += p.optional
+
+    used_keywords = set(used_keywords)
+
+    # Find all keywords that are now unused
+    remove_kw = []  # keywords now unused
+    for k in keywords:
+        if k not in used_keywords:
+            remove_kw.append(k)
+
+    # Find all words registered with the intent
+    remove = []
+    for k in remove_kw:
+        remove += find_type(k)
+
+    # remove all entries with the words in the list
+    for w in remove:
+        engine.trie.remove(w)
+
+
 def workaround_one_of_context(best_intent):
     """ Handle Adapt issue with context injection combined with one_of.
 
@@ -470,9 +518,20 @@ class IntentService:
 
     def handle_detach_intent(self, message):
         intent_name = message.data.get('intent_name')
-        new_parsers = [
-            p for p in self.engine.intent_parsers if p.name != intent_name]
-        self.engine.intent_parsers = new_parsers
+        remove_keywords = message.data.get('remove_keywords', False)
+
+        for p in self.engine.intent_parsers:
+            if p.name == intent_name:
+                parser = p
+                break
+        else:
+            return  # No parsers found
+
+        self.engine.intent_parsers.pop(parser)
+
+        if remove_keywords:
+            keywords = parser.requires + parser.optional
+            prune_keywords(keywords, self.engine.intent_parsers)
 
     def handle_detach_skill(self, message):
         skill_id = message.data.get('skill_id')
