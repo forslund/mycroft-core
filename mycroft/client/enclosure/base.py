@@ -15,7 +15,8 @@
 import asyncio
 
 from collections import namedtuple
-from threading import Lock
+from queue import Queue
+from threading import Lock, Thread
 
 from mycroft.configuration import Configuration
 from mycroft.messagebus.client import MessageBusClient
@@ -59,6 +60,22 @@ def _get_page_data(message):
     return page, namespace, index
 
 
+class GUIStarter(Thread):
+    def __init__(self):
+        super().__init__()
+
+        self.queue = Queue()
+        self.daemon = True
+        self.start()
+        self.guis = []
+
+    def run(self):
+        asyncio.set_event_loop(asyncio.new_event_loop())
+        while True:
+            args = self.queue.get()
+            self.guis.append(GUIConnection(*args))
+
+
 class Enclosure:
     def __init__(self):
         # Establish Enclosure's websocket connection to the messagebus
@@ -71,6 +88,8 @@ class Enclosure:
         self.lang = config['lang']
         self.config = config.get("enclosure")
         self.global_config = config
+
+        self.gui_starter = GUIStarter()
 
         # This datastore holds the data associated with the GUI provider. Data
         # is stored in Namespaces, so you can have:
