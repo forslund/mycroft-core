@@ -121,9 +121,6 @@ def ctrl_c_pressed():
         return False
 
 
-signal.signal(signal.SIGINT, ctrl_c_handler)
-
-
 ##############################################################################
 # Helper functions
 
