@@ -24,6 +24,9 @@ from mycroft.api import STTApi, HTTPError
 from mycroft.configuration import Configuration
 from mycroft.util.log import LOG
 
+from os.path import abspath, join, expanduser
+import sys
+
 
 class STT(metaclass=ABCMeta):
     """ STT Base class, all  STT backends derives from this one. """
@@ -203,6 +206,40 @@ def requires_pairing(func):
             else:
                 raise
     return wrapper
+
+
+class CheetahSTT(STT):
+    """Local Picovoice Cheetha STT."""
+    def __init__(self):
+        super(CheetahSTT, self).__init__()
+        self.cheetha_path = abspath(expanduser('~/projects/cheetah'))
+        cheetha_bindings = join(self.cheetha_path, 'binding/python')
+        lang_model = join(self.cheetha_path, 'lib/common/language_model.pv')
+        acu_model = join(self.cheetha_path, 'lib/common/acoustic_model.pv')
+        lib_path = join(self.cheetha_path, 'lib/linux/x86_64/libpv_cheetah.so')
+        lic_path = join(self.cheetha_path,
+                        'resources/license/cheetah_eval_linux_public.lic')
+        sys.path.append(cheetha_bindings)
+        print(cheetha_bindings)
+        from cheetah import Cheetah
+        self.cheetah = Cheetah(lib_path, acu_model, lang_model, lic_path)
+
+    def execute(self, audio, language=None):
+        self.lang = language or self.lang
+        wav_data = audio.get_wav_data(convert_rate=16000)
+        import struct
+        pcm = struct.unpack_from('h' * (len(wav_data) // 2), wav_data)
+        cheetah = self.cheetah
+        num_frames = len(pcm) // cheetah.frame_length
+        transcript = ''
+        for i in range(num_frames):
+            frame = pcm[i * cheetah.frame_length:
+                        (i + 1) * cheetah.frame_length]
+            partial_transcript, _ = cheetah.process(frame)
+            transcript += partial_transcript
+
+        transcript += cheetah.flush()
+        return transcript
 
 
 class MycroftSTT(STT):
@@ -492,6 +529,7 @@ class STTFactory:
         "deepspeech_server": DeepSpeechServerSTT,
         "deepspeech_stream_server": DeepSpeechStreamServerSTT,
         "mycroft_deepspeech": MycroftDeepSpeechSTT,
+        "cheetah": CheetahSTT,
         "yandex": YandexSTT
     }
 
