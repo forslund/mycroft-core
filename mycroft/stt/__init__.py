@@ -214,7 +214,8 @@ class CheetahSTT(STT):
         super(CheetahSTT, self).__init__()
         self.cheetha_path = abspath(expanduser('~/projects/cheetah'))
         cheetha_bindings = join(self.cheetha_path, 'binding/python')
-        lang_model = join(self.cheetha_path, 'lib/common/language_model.pv')
+        lang_model = join(self.cheetha_path,
+                          'lib/common/language_model_librispeech.pv')
         acu_model = join(self.cheetha_path, 'lib/common/acoustic_model.pv')
         lib_path = join(self.cheetha_path, 'lib/linux/x86_64/libpv_cheetah.so')
         lic_path = join(self.cheetha_path,
