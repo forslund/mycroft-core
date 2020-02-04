@@ -19,17 +19,20 @@ RUN locale-gen en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
-RUN mkdir ~/.mycroft \
-    && /opt/mycroft/mycroft-core/.venv/bin/msm -p mycroft_mark_1 default
+# Add the local configuration directory
+RUN mkdir ~/.mycroft
 EXPOSE 8181
 
 # Integration Test Suite
 FROM builder as voigt_kampff
+# Add the mycroft core virtual environment to the system path.
+ENV PATH /opt/mycroft/mycroft-core/.venv/bin:$PATH
 WORKDIR /opt/mycroft/mycroft-core/test/integrationtests/voigt_kampff
-# Activate the virtual environment for Mycroft Core, start the Mycroft Core
-# proceses and setup the skills that will run druing the test.
-RUN . /opt/mycroft/mycroft-core/.venv/bin/activate \
-    && bash -x /opt/mycroft/mycroft-core/start-mycroft.sh all \
-    && python -m test.integrationtests.voigt_kampff.test_setup -c default.yml
-# Run the integration tests
+# Install Mark I default skills
+RUN msm -p mycroft_mark_1 default
+# The behave feature files for a skill are defined within the skill's
+# repository.  Copy those files into the local feature file directory
+# for test discovery.
+RUN python -m test.integrationtests.voigt_kampff.skill_setup -c default.yml
+# Setup and run the integration tests
 ENTRYPOINT "./run_test_suite.sh"
