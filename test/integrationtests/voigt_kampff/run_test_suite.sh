@@ -6,7 +6,7 @@
 # variable has been set to include the virtual envionrment's bin directory
 
 # Start all mycroft core services.
-/opt/mycroft/mycroft-core/start-mycroft.sh all > /dev/null
+/opt/mycroft/mycroft-core/start-mycroft.sh all
 # Run the integration test suite.  Results will be formatted for input into
 # the Allure reporting tool.
 behave -f behave_html_formatter:HTMLFormatter > ~/.mycroft/behave.html
