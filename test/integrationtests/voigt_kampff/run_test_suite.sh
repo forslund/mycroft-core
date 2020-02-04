@@ -9,7 +9,7 @@
 /opt/mycroft/mycroft-core/start-mycroft.sh all
 # Run the integration test suite.  Results will be formatted for input into
 # the Allure reporting tool.
-behave -f allure_behave.formatter:AllureFormatter > ~/.mycroft/allure-result
+behave -f allure_behave.formatter:AllureFormatter -o ~/.mycroft/allure-result
 RESULT=$?
 # Stop all mycroft core services.
 /opt/mycroft/mycroft-core/stop-mycroft.sh all
