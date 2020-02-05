@@ -6,6 +6,7 @@
 # variable has been set to include the virtual envionrment's bin directory
 
 # Start all mycroft core services.
+echo pwd
 /opt/mycroft/mycroft-core/start-mycroft.sh all
 # Run the integration test suite.  Results will be formatted for input into
 # the Allure reporting tool.
