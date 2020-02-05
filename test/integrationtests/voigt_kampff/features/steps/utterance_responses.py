@@ -12,6 +12,10 @@ TIMEOUT = 10
 
 
 def find_dialog(skill_path, dialog):
+    """Check the usual location for dialogs.
+
+    TODO: subfolders
+    """
     if exists(join(skill_path, 'dialog')):
         return join(skill_path, 'dialog', 'en-us', dialog)
     else:
@@ -19,9 +23,11 @@ def find_dialog(skill_path, dialog):
 
 
 def load_dialog_file(dialog_path):
+    """Load dialog files and get the contents."""
     with open(dialog_path) as f:
         lines = f.readlines()
-    return [l.strip().lower() for l in lines]
+    return [l.strip().lower() for l in lines
+            if l.strip() != '' and l.strip()[0] != '#']
 
 
 def load_dialog_list(skill_path, dialog):
@@ -43,16 +49,24 @@ def load_dialog_list(skill_path, dialog):
 def dialog_from_sentence(sentence, skill_path):
     """Find dialog file from example sentence."""
     dialog_paths = join(skill_path, 'dialog', 'en-us', '*.dialog')
+    best = (None, 0)
     for path in glob(dialog_paths):
-        print(path)
         patterns = load_dialog_file(path)
-        match, _ = match_dialog_patterns(patterns, sentence.lower())
-        if match:
-            return basename(path)
+        match, _ = _match_dialog_patterns(patterns, sentence.lower())
+        if match is not False:
+            if len(patterns[match]) > best[1]:
+                best = (path, len(patterns[match]))
+    if best[0] is not None:
+        return basename(best[0])
+    else:
+        return None
 
 
-def match_dialog_patterns(dialogs, sentence):
-    """Match sentence against a list of dialog patterns."""
+def _match_dialog_patterns(dialogs, sentence):
+    """Match sentence against a list of dialog patterns.
+
+    Returns index of found match.
+    """
     # Allow custom fields to be anything
     d = [re.sub(r'{.*?\}', r'.*', t) for t in dialogs]
     # Remove left over '}'
@@ -60,21 +74,29 @@ def match_dialog_patterns(dialogs, sentence):
     # Merge consequtive .*'s into a single .*
     d = [re.sub(r'\.\*( \.\*)+', r'.*', t) for t in d]
     # Remove double whitespaces
-    d = [' '.join(t.split()) for t in d]
+    d = ['^' + ' '.join(t.split()) for t in d]
     debug = 'MATCHING: {}\n'.format(sentence)
-    for r in d:
+    for i, r in enumerate(d):
         match = re.match(r, sentence)
         debug += '---------------\n'
         debug += '{} {}\n'.format(r, match is not None)
         if match:
-            return True, debug
+            return i, debug
     else:
         return False, debug
 
 
+def match_dialog_patterns(dialogs, sentence):
+    """Match sentence against a list of dialog patterns.
+
+    Returns simple True/False and not index
+    """
+    index, debug = _match_dialog_patterns(dialogs, sentence)
+    return index is not False, debug
+
+
 def expected_dialog_check(utterance, skill_path, dialog):
-    # Check that expected dialog file is used
-    # Extract dialog texts from skill
+    """Check that expected dialog file is used. """
     dialogs, load_debug = load_dialog_list(skill_path, dialog)
     match, match_debug = match_dialog_patterns(dialogs, utterance)
     return match, load_debug + match_debug
@@ -121,5 +143,6 @@ def then_dialog(context, skill, dialog):
 def then_example(context, skill, example):
     skill_path = context.msm.find_skill(skill).path
     dialog = dialog_from_sentence(example, skill_path)
+    print('Matching with the dialog file: {}'.format(dialog))
     assert dialog is not None
     then_dialog(context, skill, dialog)
