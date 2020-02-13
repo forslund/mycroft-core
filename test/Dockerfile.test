@@ -87,7 +87,7 @@ RUN msm -p mycroft_mark_1 default
 WORKDIR /opt/mycroft/mycroft-core
 # Generate hash of required packages
 RUN md5sum requirements.txt test-requirements.txt dev_setup.sh > .installed
-RUN python -m test.integrationtests.voight_kampff.skill_setup -c test/integrationtests/voight_kampff/default.yml
+RUN python -m test.integrationtests.voight_kampff.test_setup -c test/integrationtests/voight_kampff/default.yml
 
 # Setup and run the integration tests
 WORKDIR /opt/mycroft/mycroft-core/test/integrationtests/voight_kampff
