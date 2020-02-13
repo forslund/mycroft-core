@@ -29,7 +29,7 @@ pipeline {
             steps {
                 echo 'Building Test Docker Image'
                 sh 'cp test/Dockerfile.test Dockerfile'
-                sh 'docker build --target voigt_kampff -t mycroft-core:${BRANCH_ALIAS} .'
+                sh 'docker build --target voight_kampff -t mycroft-core:${BRANCH_ALIAS} .'
                 echo 'Running Tests'
                 timeout(time: 10, unit: 'MINUTES')
                 {
