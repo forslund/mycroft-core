@@ -55,6 +55,7 @@ ENV LC_ALL en_US.UTF-8
 #   steps, but it is built to take advantage of Docker's caching mechanism
 #   to only rebuild things that have changed since the last build.
 RUN mkdir /opt/mycroft
+RUN mkdir /var/log/mycroft
 WORKDIR /opt/mycroft
 RUN mkdir mycroft-core skills ~/.mycroft
 RUN python3 -m venv "/opt/mycroft/mycroft-core/.venv"
