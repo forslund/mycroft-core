@@ -6,15 +6,14 @@
 # variable has been set to include the virtual envionrment's bin directory
 
 # Start all mycroft core services.
-pwd
 /opt/mycroft/mycroft-core/start-mycroft.sh all
 # Run the integration test suite.  Results will be formatted for input into
 # the Allure reporting tool.
-behave -f allure_behave.formatter:AllureFormatter -o allure-results
+behave -f allure_behave.formatter:AllureFormatter -o ~/.mycroft/allure-result
 RESULT=$?
 # Stop all mycroft core services.
 /opt/mycroft/mycroft-core/stop-mycroft.sh all
-
+chown --recursive 110:116 ~/.mycroft/allure-result
 # Remove temporary skill files
 rm -rf ~/.mycroft/skills
 # Remove intent cache
