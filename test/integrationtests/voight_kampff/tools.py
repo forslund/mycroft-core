@@ -20,9 +20,9 @@ def then_wait(msg_type, criteria_func, context, timeout=TIMEOUT):
     Returns:
         tuple (bool, str) test status and debug output
     """
-    count = 0
+    start_time = time.monotonic()
     debug = ''
-    while count < int(timeout * (1 / SLEEP_LENGTH)):
+    while time.monotonic() < start_time + timeout:
         for message in context.bus.get_messages(msg_type):
             status, test_dbg = criteria_func(message)
             debug += test_dbg
@@ -30,8 +30,7 @@ def then_wait(msg_type, criteria_func, context, timeout=TIMEOUT):
                 context.matched_message = message
                 context.bus.remove_message(message)
                 return True, debug
-        time.sleep(SLEEP_LENGTH)
-        count += 1
+        context.bus.new_message_available.wait(0.5)
     # Timed out return debug from test
     return False, debug
 
