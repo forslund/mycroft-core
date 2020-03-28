@@ -277,8 +277,9 @@ class RecognizerLoop(EventEmitter):
     Local wake word recognizer and remote general speech recognition.
     """
 
-    def __init__(self):
+    def __init__(self, watchdog):
         super(RecognizerLoop, self).__init__()
+        self._watchdog = watchdog
         self.mute_calls = 0
         self._load_config()
 
@@ -305,7 +306,7 @@ class RecognizerLoop(EventEmitter):
         # TODO - localization
         self.wakeup_recognizer = self.create_wakeup_recognizer()
         self.responsive_recognizer = ResponsiveRecognizer(
-            self.wakeword_recognizer)
+            self.wakeword_recognizer, self._watchdog)
         self.state = RecognizerLoopState()
 
     def create_wake_word_recognizer(self):
