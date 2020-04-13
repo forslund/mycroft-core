@@ -205,6 +205,7 @@ def main(ready_hook=on_ready, error_hook=on_error, watchdog=None):
     skill_manager.start()
     while not skill_manager.is_alive():
         time.sleep(0.1)
+    ready_hook()  # Report ready status
     wait_for_exit_signal()
     shutdown(skill_manager, event_scheduler)
 
