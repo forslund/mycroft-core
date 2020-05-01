@@ -9,27 +9,7 @@ that length).  Also use imperative writing, e.g. "Fix broken code" or
 "Implement my new feature", not "Fixes the broken code" or
 "Implemented my new feature".
 
-Sections below can then be filled out and edited as appropriate.
-Unused sections can optionally be removed.
-
-Please fill this out carefully.  This moment is when the code is
-clearest in the mind of you, the foremost expert in this change.
-Please pause to think of side effects and impacts.
-
-==== Fixed Issues ====
-NONE - replace with associated issue numbers, e.g. #123, #304
-
-====  Tech Notes ==== 
-NONE - explain new algorithms in detail, tool changes, etc.
-
-====  Documentation Notes ==== 
-NONE - description of a new feature or notes on behavior changes
-
-==== Localization Notes ==== 
-NONE - point to new strings, language specific functions, etc.
-
-==== Environment Notes ==== 
-NONE - new package requirements, new files being written to disk, etc.
-
-==== Protocol Notes ====
-NONE - message types added or changed, new signals, APIs, etc.
+Important things to note is 
+- Fixed Issues
+- Explanation of technical details
+- Rationale for the change
