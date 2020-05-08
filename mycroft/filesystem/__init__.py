@@ -14,6 +14,7 @@
 #
 import os
 from os.path import join, expanduser, isdir
+from xdg import BaseDirectory
 
 
 class FileSystemAccess:
@@ -30,7 +31,13 @@ class FileSystemAccess:
     def __init_path(path):
         if not isinstance(path, str) or len(path) == 0:
             raise ValueError("path must be initialized as a non empty string")
-        path = join(expanduser('~'), '.mycroft', path)
+
+        # Migrate from the old location if it still exists
+        old_path = join(expanduser('~'), '.mycroft', path)
+        if isdir(old_path):
+            os.rename(old_path, path)
+
+        path = join(BaseDirectory.save_config_path('mycroft'), path)
 
         if not isdir(path):
             os.makedirs(path)
