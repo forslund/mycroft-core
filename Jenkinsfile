@@ -9,6 +9,17 @@ pipeline {
     }
     stages {
         // Run the build in the against the dev branch to check for compile errors
+        stage('Build stuff') {
+            when {
+                anyOf {
+                    branch 'build-test'
+                }
+            }
+            steps {
+                echo 'Launching package build'
+                build (job: '../Mycroft-snap', wait: false)
+            }
+        }
         stage('Run Integration Tests') {
             when {
                 anyOf {
