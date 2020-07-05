@@ -40,6 +40,7 @@ from mycroft.util import (
 )
 from mycroft.util.lang import set_active_lang
 from mycroft.util.log import LOG
+from .api import SkillApi
 from .core import FallbackSkill
 from .event_scheduler import EventScheduler
 from .intent_service import IntentService
@@ -198,6 +199,7 @@ def main(ready_hook=on_ready, error_hook=on_error, stopping_hook=on_stopping,
     bus = _start_message_bus_client()
     _register_intent_services(bus)
     event_scheduler = EventScheduler(bus)
+    SkillApi.connect_bus(bus)
     skill_manager = _initialize_skill_manager(bus, watchdog)
 
     _wait_for_internet_connection()
