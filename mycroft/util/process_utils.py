@@ -124,9 +124,27 @@ def create_echo_function(name, whitelist=None):
 
 
 class ProcessStatus:
+    """Process status tracker.
+
+    The class tracks process status and execute callback methods on
+    state changes as well as replies to messagebus queries of the
+    process status.
+
+    Arguments:
+        name (str): process name, will be used to create the messagebus
+                    messagetype "mycroft.{name}..."
+        on_started (callable): callback to execute when process is started
+        on_alive (callable): callback to execute when minimum operation is
+                             reached.
+        on_ready (callable): callback to execute when loading is 100 %
+                             complete
+        on_error (callable): callback to execute when an unrecoverable error
+                             renders the process unusable.
+    """
     def __init__(self, name, bus,
                  on_started=None, on_alive=None, on_complete=None,
                  on_stopping=None, on_error=None):
+
         # Messagebus connection
         self.bus = bus
         self.name = name
@@ -145,6 +163,7 @@ class ProcessStatus:
         self._register_handlers()
 
     def _register_handlers(self):
+        """Register messagebus handlers for status queries."""
         self.bus.on('mycroft.{}.is_alive'.format(self.name), self.check_alive)
         self.bus.on('mycroft.{}.ready'.format(self.name),
                     self.check_ready)
@@ -152,15 +171,30 @@ class ProcessStatus:
                     self.check_ready)
 
     def check_alive(self, message=None):
-        """Respond to is_alive status request."""
+        """Respond to is_alive status request.
+
+        Arguments:
+            message: Optional message to respond to, if omitted no message
+                     is sent.
+
+        Returns:
+            bool, True if process is alive.
+        """
         if message:
             status = {'status': self.is_alive}
             self.bus.emit(message.response(data=status))
         return self.is_alive
 
     def check_ready(self, message=None):
-        """ Respond to all_loaded status request."""
-        print("CHECKING READY!")
+        """ Respond to all_loaded status request.
+
+        Arguments:
+            message: Optional message to respond to, if omitted no message
+                     is sent.
+
+        Returns:
+            bool, True if process is ready.
+        """
         if message:
             status = {'status': self.is_ready}
             self.bus.emit(message.response(data=status))
@@ -182,18 +216,22 @@ class ProcessStatus:
 
     def set_ready(self):
         """All loading is done."""
+        self.is_started = True
         self.is_alive = True
         self.is_ready = True
         if self.on_complete:
             self.on_complete()
 
     def set_stopping(self):
+        """Process shutdown has started."""
         self.is_ready = False
         if self.on_stopping:
-            self.on_stopping(err)
+            self.on_stopping()
 
     def set_error(self, err=''):
+        """An error has occured and the process is non-functional."""
+        # Intentionally leave is_started True
         self.is_ready = False
         self.is_alive = False
-        if self.on_stopping:
-            self.on_ready(err)
+        if self.on_error:
+            self.on_error(err)
