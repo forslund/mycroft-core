@@ -237,8 +237,9 @@ class AudioService:
             Args:
                 message: message bus message, not used but required
         """
-        if self.current:
-            self.current.pause()
+        with self.service_lock:
+            if self.current:
+                self.current.pause()
 
     def _resume(self, message=None):
         """
@@ -247,8 +248,9 @@ class AudioService:
             Args:
                 message: message bus message, not used but required
         """
-        if self.current:
-            self.current.resume()
+        with self.service_lock:
+            if self.current:
+                self.current.resume()
 
     def _next(self, message=None):
         """
@@ -258,8 +260,9 @@ class AudioService:
             Args:
                 message: message bus message, not used but required
         """
-        if self.current:
-            self.current.next()
+        with self.service_lock:
+            if self.current:
+                self.current.next()
 
     def _prev(self, message=None):
         """
@@ -269,8 +272,9 @@ class AudioService:
             Args:
                 message: message bus message, not used but required
         """
-        if self.current:
-            self.current.previous()
+        with self.service_lock:
+            if self.current:
+                self.current.previous()
 
     def _stop(self, message=None):
         """
@@ -297,10 +301,11 @@ class AudioService:
             Args:
                 message: message bus message, not used but required
         """
-        if self.current:
-            LOG.debug('lowering volume')
-            self.current.lower_volume()
-            self.volume_is_low = True
+        with self.service_lock:
+            if self.current:
+                LOG.debug('lowering volume')
+                self.current.lower_volume()
+                self.volume_is_low = True
 
     def _restore_volume(self, message=None):
         """
@@ -309,12 +314,13 @@ class AudioService:
             Args:
                 message: message bus message, not used but required
         """
-        if self.current:
-            LOG.debug('restoring volume')
-            self.volume_is_low = False
-            time.sleep(2)
-            if not self.volume_is_low:
-                self.current.restore_volume()
+        with self.current:
+            if self.current:
+                LOG.debug('restoring volume')
+                self.volume_is_low = False
+                time.sleep(2)
+                if not self.volume_is_low:
+                    self.current.restore_volume()
 
     def _restore_volume_after_record(self, message=None):
         """
@@ -327,7 +333,9 @@ class AudioService:
         """
         def restore_volume():
             LOG.debug('restoring volume')
-            self.current.restore_volume()
+            with self.service_lock:
+                if self.current:
+                    self.current.restore_volume()
 
         if self.current:
             self.bus.on('recognizer_loop:speech.recognition.unknown',
@@ -385,11 +393,12 @@ class AudioService:
         self.play_start_time = time.monotonic()
 
     def _queue(self, message):
-        if self.current:
-            tracks = message.data['tracks']
-            self.current.add_list(tracks)
-        else:
-            self._play(message)
+        with self.current:
+            if self.current:
+                tracks = message.data['tracks']
+                self.current.add_list(tracks)
+            else:
+                self._play(message)
 
     def _play(self, message):
         """
@@ -420,10 +429,11 @@ class AudioService:
             Args:
                 message: message bus message, not used but required
         """
-        if self.current:
-            track_info = self.current.track_info()
-        else:
-            track_info = {}
+        with self.service_lock:
+            if self.current:
+                track_info = self.current.track_info()
+            else:
+                track_info = {}
         self.bus.emit(Message('mycroft.audio.service.track_info_reply',
                               data=track_info))
 
