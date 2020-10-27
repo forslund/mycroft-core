@@ -124,7 +124,7 @@ def after_feature(context, feature):
 def reset_config(context):
     """Reset configuration with changes stored in original_config of context.
     """
-    context.log.info('Resetting patched configuration...')
+    context.log.debug('Resetting patched configuration...')
 
     context.bus.emit(Message('configuration.patch.clear'))
     key = list(context.original_config)[0]
