@@ -7,6 +7,21 @@ from time import sleep
 from .log import LOG
 
 
+def initialize_mp_context():
+    """Handle import behaviour changes in python 3.9+
+
+    Pre-import colliding multiprocessing parts.
+    This should be considered a workaround and not a solution of the issue.
+    """
+    LOG.info('Preloading multiprocessing internals...')
+    import multiprocessing.popen_spawn_posix  # noqa
+    import multiprocessing.queues   # noqa
+    import multiprocessing.resource_tracker  # noqa
+
+
+initialize_mp_context()
+
+
 def reset_sigint_handler():
     """Reset the sigint handler to the default.
 
