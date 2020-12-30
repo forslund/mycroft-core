@@ -14,24 +14,20 @@
 #
 """Factory functions for loading hotword engines - both internal and plugins.
 """
+import distutils.spawn
 from time import time, sleep
 import os
 import platform
-import posixpath
 import struct
 import sys
 import tempfile
-import requests
 from contextlib import suppress
 from glob import glob
-from os.path import dirname, exists, join, abspath, expanduser, isfile, isdir
+from os.path import dirname, exists, join, abspath, expanduser, isdir
 from shutil import rmtree
 from threading import Timer, Thread
-from urllib.error import HTTPError
 
-from petact import install_package
-
-from mycroft.configuration import Configuration, LocalConf, USER_CONFIG
+from mycroft.configuration import Configuration
 from mycroft.util.log import LOG
 from mycroft.util.monotonic_event import MonotonicEvent
 from mycroft.util.plugins import load_plugin
@@ -191,27 +187,17 @@ class PreciseHotword(HotWordEngine):
         from precise_runner import (
             PreciseRunner, PreciseEngine, ReadWriteStream
         )
-        local_conf = LocalConf(USER_CONFIG)
-        if (local_conf.get('precise', {}).get('dist_url') ==
-                'http://bootstrap.mycroft.ai/artifacts/static/daily/'):
-            del local_conf['precise']['dist_url']
-            local_conf.store()
-            Configuration.updated(None)
+        self.config = Configuration.get()['precise']
 
-        self.download_complete = True
+        # Get precise-engine from system or from dev-setup install
+        precise_exe = (
+            distutils.spawn.find_executable("precise-engine") or
+            expanduser(join(self.folder, 'precise-engine', 'precise-engine'))
+        )
+        default_model = join(self.folder, self.model_name(key_phrase))
+        model = self.config.get('local_model_file', default_model)
 
-        self.show_download_progress = Timer(0, lambda: None)
-        precise_config = Configuration.get()['precise']
-
-        precise_exe = self.update_precise(precise_config)
-
-        local_model = self.config.get('local_model_file')
-        if local_model:
-            self.precise_model = expanduser(local_model)
-        else:
-            self.precise_model = self.install_model(
-                precise_config['model_url'], key_phrase.replace(' ', '-')
-            ).replace('.tar.gz', '.pb')
+        self.precise_model = expanduser(model)
 
         self.has_found = False
         self.stream = ReadWriteStream()
@@ -229,57 +215,13 @@ class PreciseHotword(HotWordEngine):
         )
         self.runner.start()
 
-    def update_precise(self, precise_config):
-        """Continously try to download precise until successful"""
-        precise_exe = None
-        while not precise_exe:
-            try:
-                precise_exe = self.install_exe(precise_config['dist_url'])
-            except TriggerReload:
-                raise
-            except Exception as e:
-                LOG.error(
-                    'Precise could not be downloaded({})'.format(repr(e)))
-                if exists(self.install_destination):
-                    precise_exe = self.install_destination
-                else:
-                    # Wait one minute before retrying
-                    sleep(60)
-        return precise_exe
-
     @property
     def folder(self):
         return join(expanduser('~'), '.mycroft', 'precise')
 
-    @property
-    def install_destination(self):
-        return join(self.folder, 'precise-engine', 'precise-engine')
-
-    def install_exe(self, url: str) -> str:
-        url = url.format(arch=platform.machine())
-        if not url.endswith('.tar.gz'):
-            url = requests.get(url).text.strip()
-        if install_package(
-                url, self.folder,
-                on_download=self.on_download, on_complete=self.on_complete
-        ):
-            raise TriggerReload
-        return self.install_destination
-
-    def install_model(self, url: str, wake_word: str) -> str:
-        model_url = url.format(wake_word=wake_word)
-        model_file = join(self.folder, posixpath.basename(model_url))
-        try:
-            install_package(
-                model_url, self.folder,
-                on_download=lambda: LOG.info('Updated precise model')
-            )
-        except (HTTPError, ValueError):
-            if isfile(model_file):
-                LOG.info("Couldn't find remote model.  Using local file")
-            else:
-                raise NoModelAvailable('Failed to download model:', model_url)
-        return model_file
+    @staticmethod
+    def model_name(key_phrase):
+        return key_phrase.replace(' ', '-') + '.pb'
 
     @staticmethod
     def _snd_msg(cmd):

@@ -566,6 +566,9 @@ else
     echo 'Skipping mimic build.'
 fi
 
+# Install precise and hey mycroft model
+"${TOP}/scripts/install-precise.sh"
+
 # set permissions for common scripts
 chmod +x start-mycroft.sh
 chmod +x stop-mycroft.sh
