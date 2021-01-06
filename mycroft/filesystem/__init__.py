@@ -35,10 +35,10 @@ class FileSystemAccess:
 
         # Migrate from the old location if it still exists
         old_path = join(expanduser('~'), '.mycroft', path)
+        path = join(BaseDirectory.save_config_path('mycroft'), path)
+
         if isdir(old_path):
             shutil.move(old_path, path)
-
-        path = join(BaseDirectory.save_config_path('mycroft'), path)
 
         if not isdir(path):
             os.makedirs(path)
