@@ -209,6 +209,10 @@ class Configuration:
         """
         if not configs:
             configs = configs or []
+
+            # First use patched config
+            configs.append(Configuration.__patch)
+
             # Then use XDG config
             # This includes both the user config and
             # /etc/xdg/mycroft/mycroft.conf
@@ -241,9 +245,6 @@ class Configuration:
 
             # Then use the config that comes with the package
             configs.append(LocalConf(DEFAULT_CONFIG))
-
-            # Lastly use patched config
-            configs.append(Configuration.__patch)
 
             # Make sure we reverse the array, as merge_dict will put every new
             # file on top of the previous one
