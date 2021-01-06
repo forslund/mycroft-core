@@ -14,6 +14,7 @@
 #
 import os
 from os.path import join, expanduser, isdir
+import shutil
 from xdg import BaseDirectory
 
 
@@ -35,7 +36,7 @@ class FileSystemAccess:
         # Migrate from the old location if it still exists
         old_path = join(expanduser('~'), '.mycroft', path)
         if isdir(old_path):
-            os.rename(old_path, path)
+            shutil.move(old_path, path)
 
         path = join(BaseDirectory.save_config_path('mycroft'), path)
 
