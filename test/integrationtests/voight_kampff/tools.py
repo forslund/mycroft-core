@@ -83,8 +83,9 @@ def mycroft_responses(context):
     if len(messages) > 0:
         responses = 'Mycroft responded with:\n'
         for m in messages:
+            print(m, m.data)
             responses += 'Mycroft: '
-            if 'dialog' in m.data['meta']:
+            if 'meta' in m.data and 'dialog' in m.data['meta']:
                 responses += '{}.dialog'.format(m.data['meta']['dialog'])
             responses += '({})\n'.format(m.data['meta'].get('skill'))
             responses += '"{}"\n'.format(m.data['utterance'])
