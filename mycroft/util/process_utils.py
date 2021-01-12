@@ -17,6 +17,7 @@ def initialize_mp_context():
     import multiprocessing.popen_spawn_posix  # noqa
     import multiprocessing.queues   # noqa
     import multiprocessing.resource_tracker  # noqa
+    import multiprocessing.synchronize  # noqa
 
 
 initialize_mp_context()
